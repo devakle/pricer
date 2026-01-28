@@ -35,6 +35,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
     opt.UseSqlServer(builder.Configuration.GetConnectionString("Default"),
@@ -74,11 +82,19 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+    options.AddPolicy("MerchantOnly", policy => policy.RequireRole("Merchant"));
+    options.AddPolicy("CanReportPrice", policy => policy.RequireRole("User", "Admin", "Merchant"));
+});
 
 
 var app = builder.Build();
 
+app.UseCors("DevCors");
+app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
 

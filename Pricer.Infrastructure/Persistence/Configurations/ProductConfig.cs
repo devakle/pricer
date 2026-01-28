@@ -15,6 +15,7 @@ public sealed class ProductConfig : IEntityTypeConfiguration<Product>
         b.Property(x => x.NameNormalized).HasMaxLength(250).IsRequired();
         b.Property(x => x.Brand).HasMaxLength(120);
         b.Property(x => x.Category).HasMaxLength(120);
+        b.Property(x => x.ImageUrl).HasMaxLength(400);
 
         b.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         b.HasIndex(x => x.NameNormalized).HasDatabaseName("IX_products_name_normalized");

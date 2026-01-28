@@ -7,5 +7,6 @@ public sealed class Product
     public string NameNormalized { get; set; } = default!;
     public string? Brand { get; set; }
     public string? Category { get; set; }
+    public string? ImageUrl { get; set; }
     public DateTime CreatedAt { get; set; }
 }
