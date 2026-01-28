@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Pricer.Api/Pricer.Api.csproj" />
+  <Project Path="Pricer.Application/Pricer.Application.csproj" />
+  <Project Path="Pricer.Domain/Pricer.Domain.csproj" />
+  <Project Path="Pricer.Infrastructure/Pricer.Infrastructure.csproj" />
+</Solution>
