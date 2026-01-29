@@ -1,8 +1,21 @@
 <script setup>
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 </script>
 
 <template>
   <div class="page">
+    <nav class="topbar">
+      <div class="brand">
+        <span class="dot" />
+        Pricer
+      </div>
+      <div class="links">
+        <router-link to="/" :class="{ active: route.name === 'home' }">Mapa</router-link>
+        <router-link to="/products" :class="{ active: route.name === 'products' }">Productos</router-link>
+      </div>
+    </nav>
     <router-view />
   </div>
 </template>
@@ -25,6 +38,62 @@
   color: var(--ink);
   font-family: 'Space Grotesk', system-ui, sans-serif;
   animation: page-in 0.6s ease both;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.15);
+}
+
+.links {
+  display: flex;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 118, 110, 0.12);
+}
+
+.links a {
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.links a.active,
+.links a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 
 .view {

@@ -189,7 +189,7 @@ function renderMarkers() {
       fillOpacity: 0.85,
     });
     marker.on('click', () => {
-      selectedStoreId.value = store.storeId;
+      selectStore(store.storeId);
     });
     const image = report?.imageUrl
       ? `<img src="${report.imageUrl}" alt="product" />`
@@ -205,6 +205,14 @@ function renderMarkers() {
     });
     marker.addTo(markersLayer.value);
   });
+}
+
+function selectStore(storeId) {
+  if (selectedStoreId.value === storeId) {
+    loadStoreProducts();
+    return;
+  }
+  selectedStoreId.value = storeId;
 }
 
 function fitToResults() {
@@ -567,7 +575,7 @@ onBeforeUnmount(() => {
             v-for="store in stores"
             :key="store.storeId"
             :class="{ active: store.storeId === selectedStoreId }"
-            @click="selectedStoreId = store.storeId"
+            @click="selectStore(store.storeId)"
           >
             <div>
               <strong>{{ store.name }}</strong>
@@ -619,6 +627,9 @@ onBeforeUnmount(() => {
             Categoria
             <input v-model="storeCategory" placeholder="Categoria" />
           </label>
+          <button type="button" class="ghost refresh" @click="loadStoreProducts" :disabled="!selectedStoreId">
+            Actualizar
+          </button>
         </div>
       </div>
 
@@ -1055,6 +1066,12 @@ button:not(:disabled):hover {
   display: grid;
   grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 0.8rem;
+}
+
+.store-products-header .refresh {
+  align-self: end;
+  justify-self: start;
+  white-space: nowrap;
 }
 
 .store-products-empty {

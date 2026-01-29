@@ -378,50 +378,66 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:global(body) {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(15, 118, 110, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 5%, rgba(251, 191, 36, 0.12), transparent 40%),
+    #fbf9f6;
+}
+
 .merchant {
   display: grid;
-  gap: 2.5rem;
+  gap: 2.8rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(1.6rem, 2.5vw, 3rem) clamp(1.4rem, 4vw, 3rem) 4rem;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
 }
 
 .hero {
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  align-items: center;
+  grid-template-columns: minmax(280px, 1.2fr) minmax(280px, 0.9fr);
+  align-items: start;
 }
 
 .hero-card {
   background: var(--surface);
-  border-radius: 22px;
-  padding: 1.5rem;
-  box-shadow: 0 22px 45px rgba(17, 24, 39, 0.08);
+  border-radius: 24px;
+  padding: 1.4rem;
+  box-shadow: 0 22px 45px rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.08);
 }
 
 .map-shell {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
-  gap: 2rem;
+  grid-template-columns: minmax(0, 2.2fr) minmax(300px, 1fr);
+  gap: 2.2rem;
 }
 
 .map-panel {
   position: relative;
-  border-radius: 24px;
-  min-height: 420px;
+  border-radius: 26px;
+  min-height: clamp(360px, 55vh, 620px);
   overflow: hidden;
-  box-shadow: 0 24px 50px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 24px 50px rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(15, 118, 110, 0.08);
 }
 
 .map-canvas {
   width: 100%;
   height: 100%;
-  min-height: 420px;
+  min-height: clamp(360px, 55vh, 620px);
 }
 
 .map-sidebar {
   background: var(--surface);
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 1.5rem;
-  box-shadow: 0 22px 45px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 22px 45px rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.08);
   display: grid;
   gap: 1rem;
 }
@@ -433,7 +449,7 @@ onBeforeUnmount(() => {
 
 .store-item {
   padding: 0.7rem;
-  border-radius: 12px;
+  border-radius: 14px;
   background: #f4f8f7;
   cursor: pointer;
   display: grid;
@@ -447,14 +463,15 @@ onBeforeUnmount(() => {
 .product-shell {
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .product-card {
   background: var(--surface);
-  border-radius: 22px;
-  padding: 1.5rem;
-  box-shadow: 0 20px 40px rgba(17, 24, 39, 0.08);
+  border-radius: 24px;
+  padding: 1.6rem;
+  box-shadow: 0 20px 40px rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.08);
 }
 
 .form {
@@ -475,20 +492,22 @@ label {
 }
 
 input {
-  padding: 0.6rem 0.7rem;
-  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
   border: 1px solid var(--stroke);
+  font-family: inherit;
 }
 
 button {
-  padding: 0.7rem 1rem;
+  padding: 0.75rem 1rem;
   border: none;
-  border-radius: 12px;
-  background: var(--accent);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), #0b5f58);
   color: white;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
 }
 
 button:disabled {
@@ -515,5 +534,48 @@ button:disabled {
   margin-top: 0.5rem;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+h1,
+h2 {
+  font-family: 'Fraunces', 'Times New Roman', serif;
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .map-shell {
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .map-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .map-panel,
+  .map-canvas {
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 600px) {
+  .merchant {
+    padding: 1.2rem 1rem 3rem;
+  }
+
+  .product-shell {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

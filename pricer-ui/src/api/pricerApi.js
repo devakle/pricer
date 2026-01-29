@@ -93,6 +93,18 @@ export class CatalogService {
   }
 }
 
+export class ExternalProductsService {
+  /** @param {HttpClient} http */
+  constructor(http) {
+    this.http = http;
+  }
+
+  /** @param {{ query?: string, provider?: string, take?: number }} params */
+  async search(params) {
+    return this.http.get('/api/external-products/search', { query: params });
+  }
+}
+
 /**
  * @param {{ baseUrl: string, getToken?: (() => string | null) }} options
  */
@@ -104,5 +116,6 @@ export function createPricerApi(options) {
     priceReports: new PriceReportsService(http),
     auth: new AuthService(http),
     catalog: new CatalogService(http),
+    externalProducts: new ExternalProductsService(http),
   });
 }

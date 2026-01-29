@@ -12,8 +12,7 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: [
-      'criticizingly-protozoological-reginald.ngrok-free.dev',
-      'shaw-clock-oct-drinks.trycloudflare.com'
+      'states-moderator-packet-country.trycloudflare.com'
     ]
   },
   proxy: {

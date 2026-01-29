@@ -108,3 +108,79 @@
  * @property {number} radiusKm
  * @property {number} take
  */
+
+/**
+ * @typedef {Object} ExternalMoney
+ * @property {string} currency
+ * @property {number} amount
+ */
+
+/**
+ * @typedef {Object} ExternalInstallmentInfo
+ * @property {number | null} quantity
+ * @property {ExternalMoney | null} amountPerInstallment
+ * @property {boolean | null} interestFree
+ */
+
+/**
+ * @typedef {Object} ExternalShippingInfo
+ * @property {boolean | null} freeShipping
+ * @property {string | null} shippingMode
+ * @property {string | null} deliveryPromise
+ * @property {boolean | null} pickupAvailable
+ */
+
+/**
+ * @typedef {Object} ExternalSellerInfo
+ * @property {string | null} sellerId
+ * @property {string | null} name
+ * @property {boolean | null} officialStore
+ * @property {string | null} sellerType
+ * @property {string | null} reputationLevel
+ * @property {string | null} badges
+ */
+
+/**
+ * @typedef {Object} ExternalProductOffer
+ * @property {ExternalMoney | null} price
+ * @property {ExternalMoney | null} originalPrice
+ * @property {number | null} discountPercent
+ * @property {ExternalInstallmentInfo | null} installments
+ * @property {string | null} pricePerUnit
+ * @property {string[] | null} paymentBadges
+ */
+
+/**
+ * @typedef {Object} ExternalProductMedia
+ * @property {string | null} thumbnailUrl
+ * @property {string[] | null} imageUrls
+ * @property {string[] | null} videoUrls
+ */
+
+/**
+ * @typedef {Object} ExternalProductDto
+ * @property {string | null} id
+ * @property {string} title
+ * @property {string} permalink
+ * @property {string | null} canonicalUrl
+ * @property {string[] | null} categoryPath
+ * @property {string | null} searchQuery
+ * @property {number | null} position
+ * @property {string | null} condition
+ * @property {string | null} availability
+ * @property {number | null} soldQuantity
+ * @property {string | null} lastUpdated
+ * @property {ExternalProductOffer} offer
+ * @property {ExternalShippingInfo} shipping
+ * @property {ExternalSellerInfo} seller
+ * @property {ExternalProductMedia} media
+ * @property {Object.<string, string> | null} attributes
+ * @property {string} provider
+ * @property {string} source
+ * @property {string | null} scrapeProvider
+ * @property {string | null} htmlVersion
+ * @property {string | null} selectorVersion
+ * @property {string} fetchedAtUtc
+ * @property {string[] | null} warnings
+ * @property {string | null} location
+ */

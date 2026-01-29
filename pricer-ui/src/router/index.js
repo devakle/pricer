@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import ProductsView from '../views/ProductsView.vue';
 import AdminLoginView from '../views/AdminLoginView.vue';
 import AdminPanelView from '../views/AdminPanelView.vue';
 import UserLoginView from '../views/UserLoginView.vue';
@@ -13,6 +14,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView, meta: { requiresUser: true } },
+    { path: '/products', name: 'products', component: ProductsView, meta: { requiresUser: true } },
     { path: '/login', name: 'user-login', component: UserLoginView },
     { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
     { path: '/admin', name: 'admin-panel', component: AdminPanelView, meta: { requiresAdmin: true } },

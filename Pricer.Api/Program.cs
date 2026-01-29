@@ -61,6 +61,16 @@ builder.Services.AddScoped<ISkuExistsChecker, SkuExistsChecker>();
 builder.Services.AddScoped<IPriceReportRepository, PriceReportRepository>();
 builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.ScrapingBeeOptions>(
+    builder.Configuration.GetSection("ScrapingBee"));
+
+builder.Services.AddHttpClient<Pricer.Api.Features.ExternalProducts.ScrapingBeeSearchClient>(client =>
+{
+    client.BaseAddress = new Uri("https://app.scrapingbee.com/");
+    client.DefaultRequestHeaders.Add("User-Agent", "Pricer/1.0");
+    client.Timeout = TimeSpan.FromSeconds(140);
+});
+
 var jwt = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwt["Key"]!);
 

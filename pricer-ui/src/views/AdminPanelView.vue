@@ -143,16 +143,28 @@ function logout() {
 </template>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:global(body) {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(15, 118, 110, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 5%, rgba(251, 191, 36, 0.12), transparent 40%),
+    #fbf9f6;
+}
+
 .admin-shell {
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1.6rem, 2.5vw, 3rem) clamp(1.4rem, 4vw, 3rem) 4rem;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
 }
 
 .hero {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(260px, 1.2fr) minmax(260px, 0.9fr);
   gap: 2rem;
-  align-items: center;
-  justify-content: space-between;
+  align-items: start;
   margin-bottom: 2.5rem;
 }
 
@@ -160,25 +172,68 @@ function logout() {
   display: grid;
   gap: 1rem;
   justify-items: end;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 1.3rem;
+  box-shadow: 0 20px 40px rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.08);
 }
 
 .grid {
   display: grid;
   gap: 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .ghost {
   background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 0.4rem 0.85rem;
+  color: #0f766e;
+  border: 1px solid rgba(15, 118, 110, 0.6);
+  padding: 0.5rem 1rem;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .logout {
   width: fit-content;
+}
+
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+h1 {
+  font-family: 'Fraunces', 'Times New Roman', serif;
+  font-size: clamp(2.2rem, 3.5vw, 3.2rem);
+  margin: 0.5rem 0;
+  color: #101828;
+}
+
+.subtitle {
+  color: #6b7280;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions {
+    justify-items: start;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-shell {
+    padding: 1.2rem 1rem 3rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
