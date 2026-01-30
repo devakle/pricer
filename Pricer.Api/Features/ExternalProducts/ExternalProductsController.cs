@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 using Pricer.Api.Common.Api;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,10 +18,43 @@ namespace Pricer.Api.Features.ExternalProducts;
 public sealed class ExternalProductsController : ControllerBase
 {
     private readonly ScrapingBeeSearchClient _scrapingBeeSearchClient;
+    private readonly ScrapeGraphSearchClient _scrapeGraphSearchClient;
+    private readonly ScrapeGraphOptions _scrapeGraphOptions;
+    private readonly PlaywrightSearchClient _playwrightSearchClient;
+    private readonly PlaywrightOptions _playwrightOptions;
+    private readonly AmazonPlaywrightSearchClient _amazonPlaywrightSearchClient;
+    private readonly AmazonPlaywrightOptions _amazonPlaywrightOptions;
+    private readonly AliExpressPlaywrightSearchClient _aliExpressPlaywrightSearchClient;
+    private readonly AliExpressPlaywrightOptions _aliExpressPlaywrightOptions;
+    private readonly IDistributedCache _cache;
+    private readonly ExternalSearchCacheOptions _cacheOptions;
 
-    public ExternalProductsController(ScrapingBeeSearchClient scrapingBeeSearchClient)
+    private static readonly JsonSerializerOptions CacheJsonOptions = new(JsonSerializerDefaults.Web);
+
+    public ExternalProductsController(
+        ScrapingBeeSearchClient scrapingBeeSearchClient,
+        ScrapeGraphSearchClient scrapeGraphSearchClient,
+        IOptions<ScrapeGraphOptions> scrapeGraphOptions,
+        PlaywrightSearchClient playwrightSearchClient,
+        IOptions<PlaywrightOptions> playwrightOptions,
+        AmazonPlaywrightSearchClient amazonPlaywrightSearchClient,
+        IOptions<AmazonPlaywrightOptions> amazonPlaywrightOptions,
+        AliExpressPlaywrightSearchClient aliExpressPlaywrightSearchClient,
+        IOptions<AliExpressPlaywrightOptions> aliExpressPlaywrightOptions,
+        IDistributedCache cache,
+        IOptions<ExternalSearchCacheOptions> cacheOptions)
     {
         _scrapingBeeSearchClient = scrapingBeeSearchClient;
+        _scrapeGraphSearchClient = scrapeGraphSearchClient;
+        _scrapeGraphOptions = scrapeGraphOptions.Value ?? new ScrapeGraphOptions();
+        _playwrightSearchClient = playwrightSearchClient;
+        _playwrightOptions = playwrightOptions.Value ?? new PlaywrightOptions();
+        _amazonPlaywrightSearchClient = amazonPlaywrightSearchClient;
+        _amazonPlaywrightOptions = amazonPlaywrightOptions.Value ?? new AmazonPlaywrightOptions();
+        _aliExpressPlaywrightSearchClient = aliExpressPlaywrightSearchClient;
+        _aliExpressPlaywrightOptions = aliExpressPlaywrightOptions.Value ?? new AliExpressPlaywrightOptions();
+        _cache = cache;
+        _cacheOptions = cacheOptions.Value ?? new ExternalSearchCacheOptions();
     }
 
     [Authorize(Policy = "UserOnly")]
@@ -44,7 +80,7 @@ public sealed class ExternalProductsController : ControllerBase
             : rawQuery.ToLowerInvariant();
 
         if (normalizedProvider is not null
-            && normalizedProvider is not ("all" or "mercadolibre" or "local"))
+            && normalizedProvider is not ("all" or "mercadolibre" or "mercadolibre-playwright" or "playwright" or "amazon" or "amazon-playwright" or "aliexpress" or "aliexpress-playwright" or "local"))
         {
             return BadRequest(ApiResponse<IReadOnlyList<ExternalProductDto>>.Failure(
                 "provider_not_supported",
@@ -52,19 +88,52 @@ public sealed class ExternalProductsController : ControllerBase
             ));
         }
 
+        var cacheKey = BuildCacheKey(normalizedProvider, normalizedQuery, take);
+        if (ShouldUseCache(normalizedQuery))
+        {
+            var cached = await _cache.GetStringAsync(cacheKey, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(cached))
+            {
+                var cachedItems = JsonSerializer.Deserialize<List<ExternalProductDto>>(cached, CacheJsonOptions)
+                                 ?? new List<ExternalProductDto>();
+                return Ok(ApiResponse<IReadOnlyList<ExternalProductDto>>.Success(cachedItems));
+            }
+        }
+
         var data = new List<ExternalProductDto>();
 
         try
         {
-            if (normalizedProvider is null or "all" or "mercadolibre")
+            if (normalizedProvider is null or "all" or "mercadolibre" or "mercadolibre-playwright" or "playwright")
             {
                 if (!string.IsNullOrWhiteSpace(rawQuery))
                 {
-                    var mercadoLibreItems = await _scrapingBeeSearchClient.SearchAsync(
-                        rawQuery,
-                        take,
-                        cancellationToken
-                    );
+                    IReadOnlyList<ExternalProductDto> mercadoLibreItems;
+                    if (normalizedProvider is "mercadolibre-playwright" or "playwright")
+                    {
+                        mercadoLibreItems = await _playwrightSearchClient.SearchAsync(
+                            rawQuery,
+                            take,
+                            cancellationToken
+                        );
+                    }
+                    else if (_playwrightOptions.Enabled)
+                    {
+                        mercadoLibreItems = await _playwrightSearchClient.SearchAsync(
+                            rawQuery,
+                            take,
+                            cancellationToken
+                        );
+
+                    }
+                    else
+                    {
+                        mercadoLibreItems = await _scrapingBeeSearchClient.SearchAsync(
+                            rawQuery,
+                            take,
+                            cancellationToken
+                        );
+                    }
                     data.AddRange(mercadoLibreItems);
                 }
                 else if (normalizedProvider == "mercadolibre")
@@ -72,6 +141,52 @@ public sealed class ExternalProductsController : ControllerBase
                     return BadRequest(ApiResponse<IReadOnlyList<ExternalProductDto>>.Failure(
                         "query_required",
                         "La busqueda de MercadoLibre requiere un termino."
+                    ));
+                }
+            }
+
+            if (normalizedProvider is null or "all" or "amazon" or "amazon-playwright")
+            {
+                if (!string.IsNullOrWhiteSpace(rawQuery))
+                {
+                    if (_amazonPlaywrightOptions.Enabled)
+                    {
+                        var amazonItems = await _amazonPlaywrightSearchClient.SearchAsync(
+                            rawQuery,
+                            take,
+                            cancellationToken
+                        );
+                        data.AddRange(amazonItems);
+                    }
+                }
+                else if (normalizedProvider is "amazon" or "amazon-playwright")
+                {
+                    return BadRequest(ApiResponse<IReadOnlyList<ExternalProductDto>>.Failure(
+                        "query_required",
+                        "La busqueda de Amazon requiere un termino."
+                    ));
+                }
+            }
+
+            if (normalizedProvider is null or "all" or "aliexpress" or "aliexpress-playwright")
+            {
+                if (!string.IsNullOrWhiteSpace(rawQuery))
+                {
+                    if (_aliExpressPlaywrightOptions.Enabled)
+                    {
+                        var aliExpressItems = await _aliExpressPlaywrightSearchClient.SearchAsync(
+                            rawQuery,
+                            take,
+                            cancellationToken
+                        );
+                        data.AddRange(aliExpressItems);
+                    }
+                }
+                else if (normalizedProvider is "aliexpress" or "aliexpress-playwright")
+                {
+                    return BadRequest(ApiResponse<IReadOnlyList<ExternalProductDto>>.Failure(
+                        "query_required",
+                        "La busqueda de AliExpress requiere un termino."
                     ));
                 }
             }
@@ -110,7 +225,34 @@ public sealed class ExternalProductsController : ControllerBase
             })
             .ToList();
 
+        if (ShouldUseCache(normalizedQuery))
+        {
+            var ttlSeconds = _cacheOptions.TtlSeconds <= 0 ? 300 : _cacheOptions.TtlSeconds;
+            var payload = JsonSerializer.Serialize(withPositions, CacheJsonOptions);
+            await _cache.SetStringAsync(
+                cacheKey,
+                payload,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(ttlSeconds)
+                },
+                cancellationToken);
+        }
+
         return Ok(ApiResponse<IReadOnlyList<ExternalProductDto>>.Success(withPositions));
+    }
+
+    private bool ShouldUseCache(string? normalizedQuery)
+    {
+        if (!_cacheOptions.Enabled) return false;
+        return !string.IsNullOrWhiteSpace(normalizedQuery);
+    }
+
+    private static string BuildCacheKey(string? provider, string? normalizedQuery, int take)
+    {
+        var safeProvider = string.IsNullOrWhiteSpace(provider) ? "all" : provider;
+        var safeQuery = string.IsNullOrWhiteSpace(normalizedQuery) ? "all" : normalizedQuery;
+        return $"ext-products:{safeProvider}:{safeQuery}:{take}";
     }
 
     private static List<ExternalProductDto> BuildLocalSampleProducts(string? query)

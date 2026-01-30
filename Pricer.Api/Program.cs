@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -64,12 +65,45 @@ builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 builder.Services.Configure<Pricer.Api.Features.ExternalProducts.ScrapingBeeOptions>(
     builder.Configuration.GetSection("ScrapingBee"));
 
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.ScrapeGraphOptions>(
+    builder.Configuration.GetSection("ScrapeGraph"));
+
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.PlaywrightOptions>(
+    builder.Configuration.GetSection("Playwright"));
+
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.AmazonPlaywrightOptions>(
+    builder.Configuration.GetSection("AmazonPlaywright"));
+
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.AliExpressPlaywrightOptions>(
+    builder.Configuration.GetSection("AliExpressPlaywright"));
+
+builder.Services.Configure<Pricer.Api.Features.ExternalProducts.ExternalSearchCacheOptions>(
+    builder.Configuration.GetSection("ExternalSearchCache"));
+
+var redisConnection = builder.Configuration.GetSection("Redis")["ConnectionString"];
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+
 builder.Services.AddHttpClient<Pricer.Api.Features.ExternalProducts.ScrapingBeeSearchClient>(client =>
 {
     client.BaseAddress = new Uri("https://app.scrapingbee.com/");
     client.DefaultRequestHeaders.Add("User-Agent", "Pricer/1.0");
     client.Timeout = TimeSpan.FromSeconds(140);
 });
+
+builder.Services.AddSingleton<Pricer.Api.Features.ExternalProducts.ScrapeGraphSearchClient>();
+builder.Services.AddSingleton<Pricer.Api.Features.ExternalProducts.PlaywrightSearchClient>();
+builder.Services.AddSingleton<Pricer.Api.Features.ExternalProducts.AmazonPlaywrightSearchClient>();
+builder.Services.AddSingleton<Pricer.Api.Features.ExternalProducts.AliExpressPlaywrightSearchClient>();
 
 var jwt = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwt["Key"]!);

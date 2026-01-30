@@ -15,6 +15,8 @@ const api = createPricerApi({
 const providers = [
   { value: 'all', label: 'Todos los proveedores' },
   { value: 'mercadolibre', label: 'MercadoLibre' },
+  { value: 'amazon', label: 'Amazon' },
+  { value: 'aliexpress', label: 'AliExpress' },
   { value: 'local', label: 'Proveedor local' },
 ];
 
@@ -90,7 +92,7 @@ onMounted(() => {
         <p class="eyebrow">Proveedor de precios</p>
         <h1>Busqueda multi proveedor</h1>
         <p class="subtitle">
-          Unificamos resultados de scraping de MercadoLibre y proveedores propios en un solo formato.
+          Unificamos resultados de scraping de MercadoLibre, Amazon, AliExpress y proveedores propios en un solo formato.
         </p>
       </div>
       <div class="hero-card">
