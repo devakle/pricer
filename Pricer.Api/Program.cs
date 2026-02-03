@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -46,7 +45,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
 {
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("Default"),
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("Default"),
         x => x.UseNetTopologySuite());
     opt.EnableSensitiveDataLogging();
     opt.LogTo(Console.WriteLine);
@@ -136,6 +135,27 @@ builder.Services.AddAuthorization(options =>
 
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    const int maxAttempts = 10;
+    var delay = TimeSpan.FromSeconds(15);
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch (Exception ex) when (attempt < maxAttempts)
+        {
+            app.Logger.LogWarning(ex, "Database migration failed (attempt {Attempt}/{MaxAttempts}). Retrying in {DelaySeconds}s...", attempt, maxAttempts, delay.TotalSeconds);
+            Thread.Sleep(delay);
+        }
+    }
+}
 
 app.UseCors("DevCors");
 app.UseStaticFiles();

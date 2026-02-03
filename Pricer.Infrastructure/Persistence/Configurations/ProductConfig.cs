@@ -8,7 +8,7 @@ public sealed class ProductConfig : IEntityTypeConfiguration<Product>
 {
     public void Configure(EntityTypeBuilder<Product> b)
     {
-        b.ToTable("products", "dbo");
+        b.ToTable("products");
         b.HasKey(x => x.ProductId);
 
         b.Property(x => x.Name).HasMaxLength(200).IsRequired();

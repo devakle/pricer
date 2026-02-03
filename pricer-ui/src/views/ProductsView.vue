@@ -21,9 +21,9 @@ const providers = [
 ];
 
 const form = ref({
-  query: 'yerba',
+  query: '',
   provider: 'all',
-  take: 20,
+  take: 50,
 });
 
 const loading = ref(false);
@@ -81,12 +81,19 @@ watch(
 );
 
 onMounted(() => {
-  searchProducts();
 });
 </script>
 
 <template>
   <div class="view products">
+    <teleport to="body">
+      <div v-if="loading" class="loading-overlay" aria-live="polite" aria-busy="true">
+        <div class="loading-window">
+          <div class="spinner" role="img" aria-label="Cargando"></div>
+          <div class="loading-text">Buscando productos...</div>
+        </div>
+      </div>
+    </teleport>
     <header class="hero">
       <div class="hero-text">
         <p class="eyebrow">Proveedor de precios</p>
@@ -211,9 +218,10 @@ onMounted(() => {
 }
 
 .products {
-  max-width: 1300px;
+  width: min(92vw, 1080px);
   margin: 0 auto;
-  padding: clamp(1.6rem, 2.5vw, 3rem) clamp(1.4rem, 4vw, 3rem) 4rem;
+  padding: clamp(1.6rem, 2.5vw, 4rem) clamp(1.6rem, 4vw, 3rem) 4rem;
+  box-sizing: border-box;
   font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
   display: grid;
   gap: 2.8rem;
@@ -222,7 +230,7 @@ onMounted(() => {
 .hero {
   display: grid;
   gap: 2rem;
-  grid-template-columns: minmax(280px, 1.2fr) minmax(280px, 0.9fr);
+  grid-template-columns: minmax(280px, 1.1fr) minmax(280px, 0.95fr);
   align-items: start;
 }
 
@@ -238,6 +246,8 @@ onMounted(() => {
   padding: 1.5rem;
   box-shadow: 0 20px 45px rgba(17, 24, 39, 0.12);
   border: 1px solid rgba(15, 118, 110, 0.08);
+  max-width: 460px;
+  margin-left: auto;
 }
 
 .form {
@@ -458,6 +468,59 @@ summary {
 @media (max-width: 600px) {
   .products {
     padding: 1.2rem 1rem 3rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero {
+    gap: 2.5rem;
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 12, 17, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-window {
+  width: min(320px, 84vw);
+  padding: 1.6rem 1.8rem;
+  border-radius: 22px;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.98), #f4f7f9);
+  background-color: #ffffff;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.25);
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 6px solid rgba(15, 118, 110, 0.15);
+  border-top-color: #0f766e;
+  border-right-color: #f59e0b;
+  animation: spin 0.9s linear infinite;
+}
+
+.loading-text {
+  font-weight: 600;
+  color: #0f172a;
+  text-align: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

@@ -8,7 +8,7 @@ public sealed class SkuConfig : IEntityTypeConfiguration<Sku>
 {
     public void Configure(EntityTypeBuilder<Sku> b)
     {
-        b.ToTable("skus", "dbo");
+        b.ToTable("skus");
         b.HasKey(x => x.SkuId);
 
         b.Property(x => x.DisplayName).HasMaxLength(250).IsRequired();

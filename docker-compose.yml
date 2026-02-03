@@ -1,0 +1,67 @@
+services:
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@local.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - postgres
+  
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: pricer-postgres
+    environment:
+      POSTGRES_DB: "pricer"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "Talleres123@"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pricer-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pricer"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: pricer-redis
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pricer-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=pricer;Username=postgres;Password=Talleres123@"
+      Redis__ConnectionString: "redis:6379"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  ui:
+    image: node:22-alpine
+    container_name: pricer-ui
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./pricer-ui:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+
+volumes:
+  pricer-postgres-data:

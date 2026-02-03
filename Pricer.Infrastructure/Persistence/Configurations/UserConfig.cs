@@ -8,7 +8,7 @@ public sealed class UserConfig : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> b)
     {
-        b.ToTable("users", "dbo");
+        b.ToTable("users");
         b.HasKey(x => x.UserId);
 
         b.Property(x => x.Email).HasMaxLength(200).IsRequired();

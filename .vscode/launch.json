@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vite: Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/pricer-ui/src",
+      "preLaunchTask": "npm: dev - pricer-ui"
+    },
+    {
+      "name": "Vite: Attach",
+      "type": "chrome",
+      "request": "attach",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/pricer-ui/src"
+    }
+  ]
+}

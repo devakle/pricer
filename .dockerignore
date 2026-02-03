@@ -1,0 +1,7 @@
+.git
+.vscode
+.vs
+**/bin
+**/obj
+**/node_modules
+pricer-ui/dist

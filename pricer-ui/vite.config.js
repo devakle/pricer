@@ -12,7 +12,6 @@ export default defineConfig({
   ],
   server: {
     allowedHosts: [
-      'states-moderator-packet-country.trycloudflare.com'
     ]
   },
   proxy: {

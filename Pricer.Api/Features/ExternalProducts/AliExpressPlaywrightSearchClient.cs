@@ -7,6 +7,7 @@ using PlaywrightExtraSharp.Plugins.ExtraStealth;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -52,10 +53,41 @@ public sealed class AliExpressPlaywrightSearchClient
         var limit = Math.Clamp(take, 1, 100);
         var targetUrl = BuildSearchUrl(query);
 
-        await using var browser = await new PlaywrightExtra(BrowserTypeEnum.Chromium)
-            .ConnectOverCDPAsync(endpointUrl);
+        var useProxy = _options.UseProxy && !string.IsNullOrWhiteSpace(_options.ProxyServer);
+        var useLocalBrowser = !_options.Headless || useProxy;
+        var useCdp = !useLocalBrowser;
 
-        var page = await browser.NewPageAsync((BrowserNewPageOptions?)null);
+        await using var browser = useLocalBrowser
+            ? await new PlaywrightExtra(BrowserTypeEnum.Chromium)
+                .Use(new StealthExtraPlugin())
+                .LaunchAsync(
+                    new BrowserTypeLaunchOptions
+                    {
+                        Headless = _options.Headless,
+                        SlowMo = _options.SlowMoMs,
+                        ExecutablePath = _options.BrowserPath,
+                        Proxy = useProxy
+                            ? new Proxy
+                            {
+                                Server = _options.ProxyServer!,
+                                Username = _options.ProxyUsername,
+                                Password = _options.ProxyPassword
+                            }
+                            : null
+                    },
+                    persistContext: true)
+            : await new PlaywrightExtra(BrowserTypeEnum.Chromium)
+                .ConnectOverCDPAsync(endpointUrl);
+
+        var contextOptions = new BrowserNewContextOptions
+        {
+            IgnoreHTTPSErrors = _options.IgnoreHttpsErrors
+        };
+        var context = useCdp && browser.Contexts.Count > 0 && !_options.IgnoreHttpsErrors
+            ? browser.Contexts[0]
+            : await browser.NewContextAsync(contextOptions);
+
+        var page = await context.NewPageAsync();
         // if (!string.IsNullOrWhiteSpace(_options.UserAgent))
         // {
         //     await page.SetExtraHTTPHeadersAsync(new Dictionary<string, string>
@@ -63,7 +95,9 @@ public sealed class AliExpressPlaywrightSearchClient
         //         ["User-Agent"] = _options.UserAgent!
         //     });
         // }
-        var cdpSession = await page.Context.NewCDPSessionAsync(page);
+        var cdpSession = useCdp
+            ? await page.Context.NewCDPSessionAsync(page)
+            : null;
 
         var pageTimeout = _options.TimeoutMs.GetValueOrDefault(120_000);
         if (pageTimeout <= 0) pageTimeout = 120_000;
@@ -79,30 +113,34 @@ public sealed class AliExpressPlaywrightSearchClient
                 Timeout = pageTimeout
             });
 
-        // Wait for CAPTCHA to be solved (auto-solver runs in the background)
-        var result = await cdpSession.SendAsync(
-            "Captcha.solve",
-            new Dictionary<string, object>
-            {
-                ["detectTimeout"] = 30 * 1000 // 30 seconds to detect a CAPTCHA
-            }
-        );
-        var status = result.Value.GetProperty("status").GetString();
-        Console.WriteLine($"Captcha solve status: {status}");
-
-        await page.WaitForSelectorAsync(
+        var result = await page.WaitForSelectorAsync(
             ".search-item-card-wrapper-gallery",
             new PageWaitForSelectorOptions { Timeout = waitTimeout });
 
+        if (result is null && useCdp && cdpSession is not null)
+        {
+            // Wait for CAPTCHA to be solved (auto-solver runs in the background)
+            var res = await cdpSession.SendAsync(
+                "Captcha.solve",
+                new Dictionary<string, object>
+                {
+                    ["detectTimeout"] = 30 * 1000 // 30 seconds to detect a CAPTCHA
+                }
+            );
+            var status = res.Value.GetProperty("status").GetString();
+            Console.WriteLine($"Captcha solve status: {status}");
+        }
+
         var scrollCount = _options.ScrollCount <= 0 ? 2 : _options.ScrollCount;
         var scrollWait = _options.ScrollWaitMs <= 0 ? 200 : _options.ScrollWaitMs;
+
         for (var i = 0; i < scrollCount; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
-            await page.WaitForTimeoutAsync(scrollWait);
+            await Task.Delay(scrollWait, cancellationToken);
+            await page.Mouse.WheelAsync(0, 2000);
         }
-
+        
         var rawItems = await ExtractFastAsync(page, cancellationToken);
 
         var items = new List<ExternalProductDto>();
@@ -460,6 +498,11 @@ public sealed class AliExpressPlaywrightOptions
 {
     public bool Enabled { get; init; } = true;
     public bool Headless { get; init; } = true;
+    public bool UseProxy { get; init; }
+    public string? ProxyServer { get; init; }
+    public string? ProxyUsername { get; init; }
+    public string? ProxyPassword { get; init; }
+    public bool IgnoreHttpsErrors { get; init; }
     public int? TimeoutMs { get; init; } = 120_000;
     public int? WaitForSelectorMs { get; init; } = 30_000;
     public int ScrollWaitMs { get; init; } = 200;

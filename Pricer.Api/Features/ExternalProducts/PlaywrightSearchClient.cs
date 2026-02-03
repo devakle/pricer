@@ -46,7 +46,6 @@ public sealed class PlaywrightSearchClient
         var targetUrl = BuildSearchUrl(query);
 
         await using var browser = await new PlaywrightExtra(BrowserTypeEnum.Chromium)
-            .Install()
             .Use(new StealthExtraPlugin())
             .LaunchAsync(
                 new BrowserTypeLaunchOptions

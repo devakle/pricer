@@ -8,7 +8,7 @@ public sealed class PriceReportConfig : IEntityTypeConfiguration<PriceReport>
 {
     public void Configure(EntityTypeBuilder<PriceReport> b)
     {
-        b.ToTable("price_reports", "dbo");
+        b.ToTable("price_reports");
         b.HasKey(x => x.ReportId);
 
         b.Property(x => x.Price).HasPrecision(18, 2);

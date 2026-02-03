@@ -8,7 +8,7 @@ public sealed class StoreConfig : IEntityTypeConfiguration<Store>
 {
     public void Configure(EntityTypeBuilder<Store> b)
     {
-        b.ToTable("stores", "dbo");
+        b.ToTable("stores");
         b.HasKey(x => x.StoreId);
 
         b.Property(x => x.Name).HasMaxLength(200).IsRequired();
